@@ -1,795 +1,1127 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="ja" class="h-full">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>令和開運 雅おみくじ</title>
-  
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Google Fonts: Shippori Mincho & Zen Antique -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;800&family=Zen+Antique&display=swap" rel="stylesheet">
-  
-  <!-- Canvas Confetti -->
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  
-  <!-- Tone.js for Sound Effects -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-  
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>木版画工房 - Mokuhanga Studio</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts for Authentic Japanese Feel -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Yuji+Syuku&display=swap" rel="stylesheet">
 
-  <style>
-    body {
-      font-family: 'Shippori Mincho', serif;
-      background-color: #121013;
-      color: #2b262d;
-      overflow-x: hidden;
-    }
-
-    .font-zen {
-      font-family: 'Zen Antique', serif;
-    }
-
-    /* 縦書き用スタイル */
-    .vertical-text {
-      writing-mode: vertical-rl;
-      text-orientation: upright;
-      letter-spacing: 0.15em;
-    }
-
-    /* 和風背景パターン */
-    .washi-bg {
-      background-color: #fcf9f2;
-      background-image: radial-gradient(#e5decf 0.75px, transparent 0.75px), radial-gradient(#e5decf 0.75px, #fcf9f2 0.75px);
-      background-size: 30px 30px;
-      background-position: 0 0, 15px 15px;
-    }
-
-    /* 漆風グラデーション */
-    .urushi-card {
-      background: linear-gradient(145deg, #1f1a1c, #0d0b0c);
-      border: 2px solid #c5a059;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(197, 160, 89, 0.2);
-    }
-
-    /* 朱色アクセント */
-    .shushu-bg {
-      background-color: #b82a20;
-    }
-    
-    .shushu-border {
-      border-color: #b82a20;
-    }
-
-    /* おみくじ筒のアニメーション */
-    @keyframes shake {
-      0% { transform: translate(0, 0) rotate(0deg); }
-      15% { transform: translate(-8px, -12px) rotate(-8deg); }
-      30% { transform: translate(8px, -8px) rotate(8deg); }
-      45% { transform: translate(-10px, -15px) rotate(-10deg); }
-      60% { transform: translate(10px, -5px) rotate(10deg); }
-      75% { transform: translate(-6px, -12px) rotate(-6deg); }
-      90% { transform: translate(6px, -8px) rotate(6deg); }
-      100% { transform: translate(0, 0) rotate(0deg); }
-    }
-
-    .animate-shake {
-      animation: shake 0.6s ease-in-out infinite;
-    }
-
-    /* おみくじ棒の出現アニメーション */
-    @keyframes stickEject {
-      0% { transform: translateY(0); opacity: 0; }
-      50% { opacity: 1; }
-      100% { transform: translateY(-110px); opacity: 1; }
-    }
-
-    .animate-eject {
-      animation: stickEject 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    }
-
-    /* 和風巻物の展開 */
-    @keyframes scrollOpen {
-      0% { transform: scaleY(0.05) scaleX(0.8); opacity: 0; }
-      50% { transform: scaleY(1) scaleX(0.8); opacity: 0.8; }
-      100% { transform: scaleY(1) scaleX(1); opacity: 1; }
-    }
-
-    .animate-scroll-open {
-      animation: scrollOpen 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-      transform-origin: top center;
-    }
-
-    /* スクロールバー装飾 */
-    ::-webkit-scrollbar {
-      width: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #1a181b;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #c5a059;
-      border-radius: 3px;
-    }
-  </style>
-</head>
-
-<body class="h-full flex flex-col justify-between text-stone-200 relative">
-
-  <!-- 桜の花びらエフェクト用 Canvas -->
-  <canvas id="sakuraCanvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
-
-  <!-- ヘッダー -->
-  <header class="relative z-10 w-full border-b border-amber-900/40 bg-stone-950/80 backdrop-blur-md px-4 py-3 flex items-center justify-between shadow-lg">
-    <div class="flex items-center space-x-3">
-      <div class="w-10 h-10 rounded-full shushu-bg flex items-center justify-center text-amber-100 font-bold text-xl border border-amber-400/40 shadow">
-        ⛩️
-      </div>
-      <div>
-        <h1 class="text-xl md:text-2xl font-bold tracking-widest text-amber-200 font-zen">令和開運 雅神社</h1>
-        <p class="text-xs text-stone-400 tracking-wider">電子参拝・御神籤処</p>
-      </div>
-    </div>
-
-    <!-- ナビゲーションボタン -->
-    <div class="flex items-center gap-2">
-      <button id="soundToggleBtn" class="p-2 rounded-lg border border-amber-700/50 hover:bg-amber-900/30 text-amber-200 text-sm flex items-center gap-1 transition">
-        <i data-lucide="volume-2" class="w-4 h-4"></i>
-        <span class="hidden sm:inline">効果音</span>
-      </button>
-      <button id="historyBtn" class="p-2 rounded-lg border border-amber-700/50 hover:bg-amber-900/30 text-amber-200 text-sm flex items-center gap-1 transition">
-        <i data-lucide="scroll" class="w-4 h-4"></i>
-        <span class="hidden sm:inline">おみくじ帳</span>
-      </button>
-      <button id="knotBtn" class="p-2 rounded-lg border border-amber-700/50 hover:bg-amber-900/30 text-amber-200 text-sm flex items-center gap-1 transition">
-        <i data-lucide="bookmark" class="w-4 h-4"></i>
-        <span class="hidden sm:inline">結び処</span>
-      </button>
-    </div>
-  </header>
-
-  <!-- メインコンテンツ -->
-  <main class="relative z-10 flex-1 flex flex-col items-center justify-center p-4 max-w-4xl mx-auto w-full">
-    
-    <!-- メインおみくじ画面 -->
-    <div id="drawSection" class="w-full flex flex-col items-center text-center py-6 transition-all duration-500">
-      
-      <!-- 鳥居飾りイラスト -->
-      <div class="mb-4 text-amber-500/80 opacity-90">
-        <svg class="w-24 h-12 mx-auto fill-current" viewBox="0 0 100 50">
-          <path d="M 5,10 L 95,10 L 95,15 L 85,15 L 85,45 L 75,45 L 75,20 L 25,20 L 25,45 L 15,45 L 15,15 L 5,15 Z"/>
-          <path d="M 0,5 L 100,5 L 100,10 L 0,10 Z"/>
-          <rect x="45" y="15" width="10" height="15"/>
-        </svg>
-      </div>
-
-      <h2 class="text-2xl md:text-3xl font-bold text-amber-100 mb-2 tracking-widest font-zen">心に願いを込めて</h2>
-      <p class="text-stone-400 text-sm mb-8">筒を揺らして御神籤（おみくじ）をお引きください</p>
-
-      <!-- おみくじ筒コンテナ -->
-      <div class="relative my-6 cursor-pointer group" id="cylinderArea">
-        
-        <!-- 出てくるおみくじ棒（初期は隠れている） -->
-        <div id="omikujiStick" class="absolute left-1/2 -top-4 -translate-x-1/2 w-4 h-32 bg-amber-200 rounded-t border-2 border-amber-600 shadow-md opacity-0 z-0 flex flex-col items-center justify-start pt-2">
-          <span id="stickNumber" class="text-[10px] text-amber-950 font-bold vertical-text">第一番</span>
-        </div>
-
-        <!-- 3D風おみくじ筒 -->
-        <div id="omikujiCylinder" class="relative z-10 w-36 h-64 md:w-44 md:h-72 bg-gradient-to-r from-amber-950 via-stone-900 to-amber-950 rounded-2xl border-4 border-amber-600/80 shadow-2xl flex flex-col items-center justify-between py-4 transform transition hover:scale-105">
-          <!-- 金の装飾バンド Top -->
-          <div class="w-full h-6 bg-gradient-to-r from-amber-600 via-amber-300 to-amber-600 border-y border-amber-800 shadow"></div>
-          
-          <!-- 中央の和風マーク＆文字 -->
-          <div class="flex flex-col items-center justify-center space-y-2">
-            <div class="w-16 h-16 rounded-full border-2 border-amber-500/60 flex items-center justify-center bg-black/40">
-              <span class="text-2xl font-bold text-amber-300 font-zen vertical-text">御神籤</span>
-            </div>
-          </div>
-
-          <!-- 金の装飾バンド Bottom -->
-          <div class="w-full h-6 bg-gradient-to-r from-amber-600 via-amber-300 to-amber-600 border-y border-amber-800 shadow"></div>
-        </div>
-
-        <!-- 揺らし案内ヒント -->
-        <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 text-xs text-amber-400/80 whitespace-nowrap flex items-center gap-1 group-hover:text-amber-300">
-          <i data-lucide="hand" class="w-3.5 h-3.5 animate-bounce"></i>
-          クリックまたはタップで振る
-        </div>
-      </div>
-
-      <!-- 操作ボタン -->
-      <div class="mt-10">
-        <button id="drawBtn" class="relative group overflow-hidden px-10 py-4 rounded-full shushu-bg border-2 border-amber-400 text-amber-100 font-bold text-lg tracking-widest shadow-xl hover:brightness-110 active:scale-95 transition">
-          <span class="relative z-10 flex items-center gap-2">
-            <span>おみくじを振る</span>
-            <i data-lucide="sparkles" class="w-5 h-5 text-amber-300"></i>
-          </span>
-          <div class="absolute inset-0 bg-gradient-to-r from-amber-500/0 via-amber-300/30 to-amber-500/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-        </button>
-      </div>
-
-    </div>
-
-    <!-- おみくじ結果表示画面（初期非表示） -->
-    <div id="resultSection" class="hidden w-full max-w-2xl mx-auto my-4 transition-all duration-700">
-      
-      <!-- 和紙風おみくじ本体 -->
-      <div class="washi-bg text-stone-900 rounded-lg p-6 md:p-10 shadow-2xl border-4 border-amber-800 relative animate-scroll-open overflow-hidden">
-        
-        <!-- 上部飾り赤ライン -->
-        <div class="border-b-2 border-red-800/40 pb-4 mb-6 flex justify-between items-end">
-          <div>
-            <p class="text-xs text-red-800 font-bold tracking-widest">令和開運 雅神社 御神札</p>
-            <h3 id="resultStickNum" class="text-xl font-bold font-zen text-stone-800">第一番</h3>
-          </div>
-          <div class="text-right">
-            <span class="text-xs border border-red-800 text-red-800 px-2 py-0.5 rounded">奉納・祈祷済</span>
-          </div>
-        </div>
-
-        <!-- 運勢メイン表示 -->
-        <div class="flex flex-col md:flex-row gap-6 items-center md:items-start justify-around my-6">
-          <div class="flex flex-col items-center justify-center p-4 rounded-lg bg-red-900/10 border-2 border-red-800/30 min-w-[140px]">
-            <p class="text-xs text-red-900 mb-1 font-bold">運勢</p>
-            <div id="resultLuckName" class="text-5xl md:text-6xl font-extrabold text-red-700 font-zen tracking-widest py-2">
-              大吉
-            </div>
-          </div>
-
-          <div class="flex-1 text-left">
-            <h4 class="text-sm font-bold text-stone-600 mb-1 flex items-center gap-1">
-              <i data-lucide="quote" class="w-4 h-4 text-red-800"></i>
-              運気の総評
-            </h4>
-            <p id="resultSummary" class="text-base md:text-lg text-stone-800 leading-relaxed font-semibold border-l-2 border-red-800/40 pl-3 py-1">
-              雲が晴れ渡り、輝かしい太陽が差し込むような絶好の運気です。これまでの努力が結実し、大きな好機が訪れます。
-            </p>
-          </div>
-        </div>
-
-        <!-- 項目別運勢グリッド -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-6 text-sm">
-          <div class="bg-amber-900/5 p-3 rounded border border-amber-900/20">
-            <span class="font-bold text-red-900 block mb-1">【願望】</span>
-            <span id="detailWish" class="text-stone-700">思いのままに叶う。強い信念を持て。</span>
-          </div>
-          <div class="bg-amber-900/5 p-3 rounded border border-amber-900/20">
-            <span class="font-bold text-red-900 block mb-1">【恋愛】</span>
-            <span id="detailLove" class="text-stone-700">良縁あり。素直な気持ちが吉。</span>
-          </div>
-          <div class="bg-amber-900/5 p-3 rounded border border-amber-900/20">
-            <span class="font-bold text-red-900 block mb-1">【仕事・学問】</span>
-            <span id="detailWork" class="text-stone-700">目標達成。たゆまぬ努力が実を結ぶ。</span>
-          </div>
-          <div class="bg-amber-900/5 p-3 rounded border border-amber-900/20">
-            <span class="font-bold text-red-900 block mb-1">【金運】</span>
-            <span id="detailMoney" class="text-stone-700">思いがけない収入あり。計画的に。</span>
-          </div>
-          <div class="bg-amber-900/5 p-3 rounded border border-amber-900/20">
-            <span class="font-bold text-red-900 block mb-1">【健康】</span>
-            <span id="detailHealth" class="text-stone-700">活力に満ちる。適度な運動を心がけよ。</span>
-          </div>
-          <div class="bg-amber-900/5 p-3 rounded border border-amber-900/20">
-            <span class="font-bold text-red-900 block mb-1">【旅行・失物】</span>
-            <span id="detailTravel" class="text-stone-700">吉方への旅よし。無くした物は出る。</span>
-          </div>
-        </div>
-
-        <!-- ラッキー指標 -->
-        <div class="border-t border-b border-red-800/30 py-3 my-4 flex flex-wrap justify-around text-xs md:text-sm text-stone-800 bg-red-900/5 rounded">
-          <div><span class="font-bold text-red-900">🪭 幸運の色：</span><span id="luckyColor">朱色</span></div>
-          <div><span class="font-bold text-red-900">🔮 幸運の品：</span><span id="luckyItem">木彫りの置物</span></div>
-          <div><span class="font-bold text-red-900">🧭 恵方：</span><span id="luckyDir">南南東</span></div>
-        </div>
-
-        <!-- アクションボタン -->
-        <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
-          <button id="actionKnotBtn" class="px-5 py-2.5 bg-red-800 hover:bg-red-900 text-amber-50 rounded-lg text-sm font-bold flex items-center gap-2 shadow transition">
-            <i data-lucide="bookmark" class="w-4 h-4"></i>
-            境内の結び処に結ぶ
-          </button>
-          <button id="actionShareBtn" class="px-5 py-2.5 bg-amber-800 hover:bg-amber-900 text-amber-50 rounded-lg text-sm font-bold flex items-center gap-2 shadow transition">
-            <i data-lucide="share-2" class="w-4 h-4"></i>
-            結果を共有する
-          </button>
-          <button id="actionRedrawBtn" class="px-5 py-2.5 bg-stone-700 hover:bg-stone-800 text-stone-100 rounded-lg text-sm font-bold flex items-center gap-2 transition">
-            <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
-            もう一度引く
-          </button>
-        </div>
-
-      </div>
-    </div>
-
-  </main>
-
-  <!-- 結び処モーダル -->
-  <div id="knotModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="urushi-card max-w-lg w-full rounded-2xl p-6 text-center relative border border-amber-500/40">
-      <button class="closeModalBtn absolute top-4 right-4 text-stone-400 hover:text-white">
-        <i data-lucide="x" class="w-6 h-6"></i>
-      </button>
-
-      <h3 class="text-2xl font-bold text-amber-200 font-zen mb-2">境内の御神木・結び処</h3>
-      <p class="text-xs text-stone-400 mb-6">おみくじを結ぶことで、悪運を祓い、良運を固く繋ぎ止めます。</p>
-
-      <div class="w-full h-48 bg-stone-900 rounded-xl border border-amber-900/60 relative overflow-hidden flex items-center justify-center my-4">
-        <div class="absolute top-4 inset-x-0 h-4 bg-amber-700/40 border-y border-amber-500/30 flex justify-around items-center">
-          <div class="w-2 h-6 bg-stone-200 shadow"></div>
-          <div class="w-2 h-6 bg-stone-200 shadow"></div>
-          <div class="w-2 h-6 bg-stone-200 shadow"></div>
-        </div>
-        
-        <div id="knotContainer" class="absolute inset-0 pt-8 px-4 flex flex-wrap gap-2 justify-center items-center overflow-y-auto">
-        </div>
-      </div>
-
-      <p id="knotCountText" class="text-xs text-amber-300/80 mb-4">現在 0 枚のおみくじが結ばれています</p>
-
-      <button class="closeModalBtn px-6 py-2 bg-amber-600/80 hover:bg-amber-600 text-stone-950 font-bold rounded-full text-sm">
-        境内へ戻る
-      </button>
-    </div>
-  </div>
-
-  <!-- おみくじ帳（履歴）モーダル -->
-  <div id="historyModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="urushi-card max-w-xl w-full rounded-2xl p-6 relative border border-amber-500/40 flex flex-col max-h-[85vh]">
-      <button class="closeModalBtn absolute top-4 right-4 text-stone-400 hover:text-white">
-        <i data-lucide="x" class="w-6 h-6"></i>
-      </button>
-
-      <div class="border-b border-amber-800/60 pb-3 mb-4">
-        <h3 class="text-2xl font-bold text-amber-200 font-zen flex items-center gap-2">
-          <i data-lucide="book-open" class="w-6 h-6 text-amber-400"></i>
-          参拝・御神籤帳
-        </h3>
-        <p class="text-xs text-stone-400">これまでに引いたおみくじの記録</p>
-      </div>
-
-      <div id="historyList" class="flex-1 overflow-y-auto space-y-3 pr-2 my-2">
-        <div class="text-center py-10 text-stone-500 text-sm">まだおみくじの記録がありません</div>
-      </div>
-
-      <div class="pt-3 border-t border-amber-900/40 flex justify-between items-center">
-        <button id="clearHistoryBtn" class="text-xs text-red-400 hover:text-red-300 underline transition-colors">
-          履歴を消去
-        </button>
-        <button class="closeModalBtn px-6 py-2 bg-amber-600/80 hover:bg-amber-600 text-stone-950 font-bold rounded-full text-sm">
-          閉じる
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 通知トースト -->
-  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-amber-300 text-stone-950 font-bold px-6 py-3 rounded-full shadow-2xl z-50 transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-2">
-    <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-800"></i>
-    <span id="toastMsg">クリップボードにコピーしました</span>
-  </div>
-
-  <!-- フッター -->
-  <footer class="relative z-10 w-full text-center py-4 text-xs text-stone-500 border-t border-amber-900/20 bg-stone-950/60">
-    <p>© 令和開運 雅神社 - 心静かに幸運を願う電子参拝処</p>
-  </footer>
-
-  <script>
-    /* おみくじデータ定義 */
-    const FORTUNE_DATA = [
-      {
-        luck: "大吉",
-        stickNum: "第一番",
-        summary: "天地開明し、万物光り輝く時。長年の願いが成就し、最高の幸運が舞い降ります。感謝の心を忘れずに進んでください。",
-        wish: "心掛け次第で速やかに叶う。高望みも良し。",
-        love: "最高の出会いあり。誠実な態度の人が意中の相手。",
-        work: "大きな成果を得る。昇進や合格の兆し顕著なり。",
-        money: "金運隆盛。予期せぬ宝を得る機会に恵まれる。",
-        health: "身心ともに極めて良好。活発に動いて吉。",
-        travel: "旅立つに最良の日。東南の方角が特に吉。",
-        luckyColor: "金色・朱色",
-        luckyItem: "和紙の文鎮",
-        luckyDir: "南南東"
-      },
-      {
-        luck: "中吉",
-        stickNum: "第七番",
-        summary: "運気は着実に上昇中。焦らず地道な努力を積み重ねることで、大きな成果を手にすることができます。",
-        wish: "時間はかかるが必ず叶う。諦めぬこと。",
-        love: "良好な発展あり。相手の意見に耳を傾けて吉。",
-        work: "周囲の協力を得て順調に進展する。",
-        money: "着実に入りあり。無駄遣いを控えればさらに吉。",
-        health: "良好。日頃の生活リズムを守ることが大事。",
-        travel: "近場の旅行に幸あり。リフレッシュに良し。",
-        luckyColor: "深緑色",
-        luckyItem: "木彫りの根付",
-        luckyDir: "東北東"
-      },
-      {
-        luck: "小吉",
-        stickNum: "第十二番",
-        summary: "穏やかな幸運に包まれた日。大きな変化は望わず、目の前の日常を丁寧に慈しむことが開運の鍵となります。",
-        wish: "控えめにしておけば叶う。謙虚さを保て。",
-        love: "じわじわと仲が深まる。ゆっくり焦らず。",
-        work: "凡事徹底。基本を忠実に守れば評価される。",
-        money: "収支のバランス良し。身の丈に合った過ごし方を。",
-        health: "軽い運動を習慣にすると吉。暴飲暴食に注意。",
-        travel: "身近な散策に思わぬ発見あり。",
-        luckyColor: "浅葱色（あさぎいろ）",
-        luckyItem: "手拭い",
-        luckyDir: "西南西"
-      },
-      {
-        luck: "吉",
-        stickNum: "第十八番",
-        summary: "平穏無事にして安定した運気。素直な心で人と接し、善行を積むことで更なる好運を呼び込むでしょう。",
-        wish: "望みは叶うが慢心は禁物なり。",
-        love: "穏やかな関係が続く。感謝を言葉に伝えること。",
-        work: "期待通りの結果を得る。誠意ある対応が鍵。",
-        money: "平年並み。計画的なやりくりで安泰。",
-        health: "疲れを感じたら早めの休息をとること。",
-        travel: "旅先に吉あり。計画をしっかり立てて出かけよ。",
-        luckyColor: "山吹色",
-        luckyItem: "扇子",
-        luckyDir: "北北西"
-      },
-      {
-        luck: "末吉",
-        stickNum: "第二十五番",
-        summary: "今は準備の時期。芽吹きの時に向けて力を蓄えましょう。後半に向けて徐々に運気は開けていきます。",
-        wish: "焦れば破れる。時を待てば自ずと叶う。",
-        love: "誤解が生じやすい。慎重なコミュニケーションを。",
-        work: "準備と思考の時。自己研鑽に励むが良し。",
-        money: "出費がかさみやすい。財布の紐を締めて。",
-        health: "冷えに注意。体を温める食材を摂ると吉。",
-        travel: "遠出は控えめにするが無難なり。",
-        luckyColor: "藤色",
-        luckyItem: "お茶の葉",
-        luckyDir: "東"
-      },
-      {
-        luck: "凶",
-        stickNum: "第三十三番",
-        summary: "一時的に試練の風が吹く時。しかし落ち込む必要はありません。境内におみくじを結び、気を引き締めれば難を逃れます。",
-        wish: "今は叶いにくし。方向性を再確認せよ。",
-        love: "我を通すと衝突あり。一歩譲る姿勢を。",
-        work: "ケアレスミスに注意。二重の確認を徹底せよ。",
-        money: "甘い話に惑わされるな。手堅くあれ。",
-        health: "睡眠不足に注意。十分な休養を最優先に。",
-        travel: "延期できるなら後日に改めるのが吉。",
-        luckyColor: "白色",
-        luckyItem: "塩・お守り",
-        luckyDir: "北"
-      }
-    ];
-
-    /* 音響制御 (Tone.js) */
-    let soundEnabled = true;
-    let synth = null;
-
-    function initAudio() {
-      if (!synth && typeof Tone !== 'undefined') {
-        synth = new Tone.PolySynth(Tone.Synth, {
-          oscillator: { type: "sine" },
-          envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.8 }
-        }).toDestination();
-        synth.volume.value = -8;
-      }
-    }
-
-    function playShakeSound() {
-      if (!soundEnabled) return;
-      try {
-        Tone.start();
-        initAudio();
-        const now = Tone.now();
-        synth.triggerAttackRelease("C5", "16n", now);
-        synth.triggerAttackRelease("G5", "16n", now + 0.08);
-        synth.triggerAttackRelease("E5", "16n", now + 0.16);
-      } catch(e){}
-    }
-
-    function playDrawSound() {
-      if (!soundEnabled) return;
-      try {
-        initAudio();
-        const now = Tone.now();
-        synth.triggerAttackRelease(["A4", "D5", "E5", "A5"], "2n", now);
-      } catch(e){}
-    }
-
-    /* 桜吹雪 Canvas アニメーション */
-    const canvas = document.getElementById('sakuraCanvas');
-    const ctx = canvas.getContext('2d');
-    let petals = [];
-
-    function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-
-    class Petal {
-      constructor() {
-        this.reset();
-      }
-      reset() {
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * -canvas.height;
-        this.size = Math.random() * 8 + 6;
-        this.speedY = Math.random() * 1.5 + 0.8;
-        this.speedX = Math.random() * 1 - 0.5;
-        this.angle = Math.random() * 360;
-        this.spin = Math.random() * 2 - 1;
-        this.opacity = Math.random() * 0.5 + 0.4;
-      }
-      update() {
-        this.y += this.speedY;
-        this.x += Math.sin(this.y * 0.01) + this.speedX;
-        this.angle += this.spin;
-        if (this.y > canvas.height + 20) {
-          this.reset();
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        wood: {
+                            50: '#fdfbf7',
+                            100: '#f6f0e4',
+                            200: '#ebd9c1',
+                            300: '#dcbe97',
+                            400: '#cc9e6d',
+                            500: '#b87e45',
+                            600: '#996035',
+                            700: '#7a482b',
+                            800: '#5c3522',
+                            900: '#3e2217',
+                        },
+                        sumi: '#1c1b1a',
+                        shu: '#c03529',
+                        ai: '#1b365d',
+                        uguisu: '#5b6b44',
+                        yamabuki: '#e59b27',
+                        washi: '#f7f4ea'
+                    },
+                    fontFamily: {
+                        mincho: ['"Shippori Mincho"', 'serif'],
+                        yuji: ['"Yuji Syuku"', 'serif']
+                    }
+                }
+            }
         }
-      }
-      draw() {
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        ctx.rotate((this.angle * Math.PI) / 180);
-        ctx.globalAlpha = this.opacity;
-        ctx.fillStyle = "#fbcfe8";
+    </script>
+    <style>
+        body {
+            font-family: 'Shippori Mincho', serif;
+            background-color: #2a2421;
+            background-image: radial-gradient(#3a322d 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
 
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.bezierCurveTo(-this.size, -this.size / 2, -this.size, this.size, 0, this.size);
-        ctx.bezierCurveTo(this.size, this.size, this.size, -this.size / 2, 0, 0);
-        ctx.fill();
+        .washi-texture {
+            background-color: #f7f4ea;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.86 0 7-3.14 7-7s-3.14-7-7-7-7 3.14-7 7 3.14 7 7 7zm48 25c3.86 0 7-3.14 7-7s-3.14-7-7-7-7 3.14-7 7 3.14 7 7 7zm-43-7c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm63 31c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zM34 90c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm56-67c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5z' fill='%208c7c6d' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+        }
 
-        ctx.restore();
-      }
-    }
+        .wood-texture {
+            background-color: #a67c52;
+            background-image: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0, 0, 0, 0.05) 3px, rgba(0, 0, 0, 0.05) 6px);
+        }
 
-    for (let i = 0; i < 35; i++) {
-      petals.push(new Petal());
-    }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #2a2421;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #7a482b;
+            border-radius: 3px;
+        }
 
-    function animateSakura() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      petals.forEach(p => {
-        p.update();
-        p.draw();
-      });
-      requestAnimationFrame(animateSakura);
-    }
-    animateSakura();
+        /* Tool cursor indicators */
+        .cursor-chisel { cursor: crosshair; }
+        .cursor-baren { cursor: grab; }
+        .cursor-baren:active { cursor: grabbing; }
 
-    let isDrawing = false;
-    let currentFortune = null;
-    let knotCount = 12;
+        /* Japanese Stamp Seal Effect */
+        .hanko-seal {
+            border: 2px solid #c03529;
+            color: #c03529;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-family: 'Yuji Syuku', serif;
+            display: inline-block;
+            transform: rotate(-3deg);
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col text-slate-200 select-none overflow-x-hidden">
 
-    const drawBtn = document.getElementById('drawBtn');
-    const cylinderArea = document.getElementById('cylinderArea');
-    const omikujiCylinder = document.getElementById('omikujiCylinder');
-    const omikujiStick = document.getElementById('omikujiStick');
-    const stickNumber = document.getElementById('stickNumber');
-    const drawSection = document.getElementById('drawSection');
-    const resultSection = document.getElementById('resultSection');
-
-    function handleDrawOmikuji() {
-      if (isDrawing) return;
-      isDrawing = true;
-
-      playShakeSound();
-
-      omikujiCylinder.classList.add('animate-shake');
-      drawBtn.disabled = true;
-      drawBtn.classList.add('opacity-50', 'cursor-not-allowed');
-
-      const randomIndex = Math.floor(Math.random() * FORTUNE_DATA.length);
-      currentFortune = FORTUNE_DATA[randomIndex];
-      stickNumber.textContent = currentFortune.stickNum;
-
-      let interval = setInterval(playShakeSound, 180);
-
-      setTimeout(() => {
-        clearInterval(interval);
-        omikujiCylinder.classList.remove('animate-shake');
-
-        omikujiStick.classList.add('animate-eject');
-        playDrawSound();
-
-        setTimeout(() => {
-          showResult(currentFortune);
-          saveHistory(currentFortune);
-          isDrawing = false;
-          drawBtn.disabled = false;
-          drawBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-          omikujiStick.classList.remove('animate-eject');
-        }, 1100);
-
-      }, 1200);
-    }
-
-    drawBtn.addEventListener('click', handleDrawOmikuji);
-    cylinderArea.addEventListener('click', handleDrawOmikuji);
-
-    function showResult(fortune) {
-      document.getElementById('resultStickNum').textContent = fortune.stickNum;
-      document.getElementById('resultLuckName').textContent = fortune.luck;
-      document.getElementById('resultSummary').textContent = fortune.summary;
-      document.getElementById('detailWish').textContent = fortune.wish;
-      document.getElementById('detailLove').textContent = fortune.love;
-      document.getElementById('detailWork').textContent = fortune.work;
-      document.getElementById('detailMoney').textContent = fortune.money;
-      document.getElementById('detailHealth').textContent = fortune.health;
-      document.getElementById('detailTravel').textContent = fortune.travel;
-      document.getElementById('luckyColor').textContent = fortune.luckyColor;
-      document.getElementById('luckyItem').textContent = fortune.luckyItem;
-      document.getElementById('luckyDir').textContent = fortune.luckyDir;
-
-      if (fortune.luck === "大吉" && typeof confetti !== 'undefined') {
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 },
-          colors: ['#c5a059', '#b82a20', '#ffffff', '#ffd700']
-        });
-      }
-
-      drawSection.classList.add('hidden');
-      resultSection.classList.remove('hidden');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    document.getElementById('actionRedrawBtn').addEventListener('click', () => {
-      resultSection.classList.add('hidden');
-      drawSection.classList.remove('hidden');
-    });
-
-    /* ローカルストレージ＆履歴管理 */
-    function saveHistory(fortune) {
-      let history = JSON.parse(localStorage.getItem('omikuji_history') || '[]');
-      const now = new Date();
-      const dateStr = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
-      
-      history.unshift({
-        date: dateStr,
-        luck: fortune.luck,
-        stickNum: fortune.stickNum,
-        summary: fortune.summary
-      });
-
-      if (history.length > 20) history.pop();
-      localStorage.setItem('omikuji_history', JSON.stringify(history));
-    }
-
-    function renderHistory() {
-      const historyList = document.getElementById('historyList');
-      let history = JSON.parse(localStorage.getItem('omikuji_history') || '[]');
-
-      if (history.length === 0) {
-        historyList.innerHTML = '<div class="text-center py-10 text-stone-500 text-sm">まだおみくじの記録がありません</div>';
-        return;
-      }
-
-      historyList.innerHTML = history.map((item) => `
-        <div class="p-3 rounded-lg bg-stone-900/80 border border-amber-900/40 flex items-center justify-between">
-          <div>
-            <div class="flex items-center gap-2">
-              <span class="text-xs text-amber-500/80">${item.date}</span>
-              <span class="text-xs text-stone-400 font-mono">${item.stickNum}</span>
+    <header class="bg-wood-900 border-b border-wood-700 px-6 py-3 flex flex-wrap items-center justify-between shadow-lg">
+        <div class="flex items-center space-x-4">
+            <div class="w-10 h-10 rounded-lg bg-shu text-washi flex items-center justify-center font-bold text-2xl shadow-md border border-red-800">
+                刻
             </div>
-            <p class="text-xs text-stone-300 mt-1 line-clamp-1">${item.summary}</p>
-          </div>
-          <div class="font-zen text-lg font-bold ${item.luck === '大吉' ? 'text-amber-400' : 'text-red-400'} min-w-[3.5rem] text-right">
-            ${item.luck}
-          </div>
+            <div>
+                <h1 class="text-xl md:text-2xl font-bold tracking-widest text-wood-100 flex items-center gap-2">
+                    木版画工房 <span class="text-xs text-wood-300 font-normal px-2 py-0.5 rounded bg-wood-800 border border-wood-600">Mokuhanga Studio</span>
+                </h1>
+                <p class="text-xs text-wood-400">江戸の伝統技術とデジタルアートの融合</p>
+            </div>
         </div>
-      `).join('');
-    }
 
-    document.getElementById('actionKnotBtn').addEventListener('click', () => {
-      knotCount++;
-      addKnotPaper();
-      showToast("境内のおみくじ結び処にお納めしました");
-      openModal('knotModal');
-    });
+        <!-- Mode Selector Tabs -->
+        <div class="flex items-center space-x-2 mt-2 sm:mt-0 bg-wood-950 p-1 rounded-xl border border-wood-800">
+            <button id="mode-carve-btn" onclick="switchMode('carve')" class="px-4 py-1.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 bg-wood-700 text-white shadow">
+                <i class="fa-solid fa-cut"></i> 版刻・手彫り刷り
+            </button>
+            <button id="mode-convert-btn" onclick="switchMode('convert')" class="px-4 py-1.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-wood-400 hover:text-white">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> 写真・絵画 浮世絵変換
+            </button>
+        </div>
 
-    function addKnotPaper() {
-      const container = document.getElementById('knotContainer');
-      const knot = document.createElement('div');
-      knot.className = "w-3 h-10 bg-amber-100/90 rounded-sm shadow-md border-x border-amber-300/50 transform rotate-12 flex items-center justify-center opacity-90 transition hover:scale-110";
-      knot.style.transform = `rotate(${Math.floor(Math.random() * 60 - 30)}deg)`;
-      knot.innerHTML = `<span class="text-[8px] text-red-900 vertical-text font-bold">奉納</span>`;
-      container.appendChild(knot);
-      document.getElementById('knotCountText').textContent = `現在 ${knotCount} 枚のおみくじが結ばれています`;
-    }
+        <div class="flex items-center space-x-3 mt-2 sm:mt-0">
+            <button onclick="toggleAudio()" id="audio-btn" class="p-2 rounded-lg bg-wood-800 hover:bg-wood-700 text-wood-200 border border-wood-700 text-sm transition" title="効果音切り替え">
+                <i class="fa-solid fa-volume-high"></i>
+            </button>
+            <button onclick="downloadArtwork()" class="px-4 py-1.5 rounded-lg bg-shu hover:bg-red-700 text-white font-bold text-sm shadow transition flex items-center gap-2 border border-red-800">
+                <i class="fa-solid fa-download"></i> 完成画を保存
+            </button>
+        </div>
+    </header>
 
-    for(let i=0; i<8; i++) addKnotPaper();
+    <main class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+        
+        <!-- LEFT CONTROL PANEL (Tools / Converter Controls) -->
+        <aside class="w-full md:w-80 bg-wood-900 border-r border-wood-800 flex flex-col z-10 custom-scrollbar overflow-y-auto">
+            
+            <!-- MODE 1 CONTROLS: DIGITAL CARVING -->
+            <div id="carve-controls" class="p-4 space-y-5">
+                <!-- Chisel Selection -->
+                <div>
+                    <h3 class="text-xs font-bold text-wood-300 uppercase tracking-wider mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-toolbox text-yamabuki"></i> 彫刻刀・工具選択
+                    </h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="setTool('v_gouge')" id="tool-v_gouge" class="tool-btn active flex items-center gap-2 p-2.5 rounded-lg border bg-wood-800 border-yamabuki text-white text-xs font-medium hover:bg-wood-700 transition">
+                            <i class="fa-solid fa-v text-yamabuki text-sm"></i> 三角刀 (細線)
+                        </button>
+                        <button onclick="setTool('round_gouge')" id="tool-round_gouge" class="tool-btn flex items-center gap-2 p-2.5 rounded-lg border bg-wood-800 border-wood-700 text-wood-300 text-xs font-medium hover:bg-wood-700 transition">
+                            <i class="fa-solid fa-circle-notch text-sm"></i> 丸刀 (広彫り)
+                        </button>
+                        <button onclick="setTool('flat_chisel')" id="tool-flat_chisel" class="tool-btn flex items-center gap-2 p-2.5 rounded-lg border bg-wood-800 border-wood-700 text-wood-300 text-xs font-medium hover:bg-wood-700 transition">
+                            <i class="fa-solid fa-vector-square text-sm"></i> 平刀 (面削り)
+                        </button>
+                        <button onclick="setTool('kiri_chisel')" id="tool-kiri_chisel" class="tool-btn flex items-center gap-2 p-2.5 rounded-lg border bg-wood-800 border-wood-700 text-wood-300 text-xs font-medium hover:bg-wood-700 transition">
+                            <i class="fa-solid fa-pen-nib text-sm"></i> 印刀 (輪郭切込み)
+                        </button>
+                        <button onclick="setTool('roller')" id="tool-roller" class="tool-btn col-span-2 flex items-center justify-center gap-2 p-2.5 rounded-lg border bg-wood-800 border-wood-700 text-wood-300 text-xs font-medium hover:bg-wood-700 transition">
+                            <i class="fa-solid fa-paint-roller text-shu text-sm"></i> 版木インク着色ローラー
+                        </button>
+                        <button onclick="setTool('baren')" id="tool-baren" class="tool-btn col-span-2 flex items-center justify-center gap-2 p-2.5 rounded-lg border bg-wood-800 border-wood-700 text-wood-300 text-xs font-medium hover:bg-wood-700 transition">
+                            <i class="fa-solid fa-hand-holding-hand text-yamabuki text-sm"></i> 馬連 (Baren) 擦り込み
+                        </button>
+                    </div>
+                </div>
 
-    document.getElementById('actionShareBtn').addEventListener('click', () => {
-      if (!currentFortune) return;
-      const shareText = `【令和開運 雅おみくじ】本日の運勢は『${currentFortune.luck}』でした！ (${currentFortune.stickNum})\n幸運の色: ${currentFortune.luckyColor}\n#雅おみくじ #おみくじ`;
-      
-      const textarea = document.createElement('textarea');
-      textarea.value = shareText;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-      
-      showToast("結果をクリップボードにコピーしました");
-    });
+                <!-- Tool Size Slider -->
+                <div>
+                    <div class="flex justify-between text-xs text-wood-300 font-semibold mb-1">
+                        <span>刃の太さ / 工具サイズ</span>
+                        <span id="tool-size-val" class="text-yamabuki">5 px</span>
+                    </div>
+                    <input type="range" id="tool-size" min="1" max="40" value="5" oninput="updateToolSize(this.value)" class="w-full accent-yamabuki bg-wood-950 h-2 rounded-lg cursor-pointer">
+                </div>
 
-    function showToast(msg) {
-      const toast = document.getElementById('toast');
-      document.getElementById('toastMsg').textContent = msg;
-      toast.classList.remove('translate-y-20', 'opacity-0');
-      toast.classList.add('translate-y-0', 'opacity-100');
-      setTimeout(() => {
-        toast.classList.remove('translate-y-0', 'opacity-100');
-        toast.classList.add('translate-y-20', 'opacity-0');
-      }, 2500);
-    }
+                <!-- Traditional Color Palette -->
+                <div>
+                    <h3 class="text-xs font-bold text-wood-300 uppercase tracking-wider mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-palette text-shu"></i> 伝統和色インクパレット
+                    </h3>
+                    <div class="grid grid-cols-4 gap-2">
+                        <button onclick="setColor('#1c1b1a', '墨 Sumi')" class="color-btn flex flex-col items-center p-2 rounded-lg border border-wood-700 bg-wood-950 hover:scale-105 transition active-color" style="border-color: #1c1b1a;">
+                            <span class="w-6 h-6 rounded-full border border-gray-600 mb-1" style="background-color: #1c1b1a;"></span>
+                            <span class="text-[10px] text-wood-200">墨</span>
+                        </button>
+                        <button onclick="setColor('#c03529', '朱 Shu')" class="color-btn flex flex-col items-center p-2 rounded-lg border border-wood-700 bg-wood-950 hover:scale-105 transition">
+                            <span class="w-6 h-6 rounded-full border border-gray-600 mb-1" style="background-color: #c03529;"></span>
+                            <span class="text-[10px] text-wood-200">朱赤</span>
+                        </button>
+                        <button onclick="setColor('#1b365d', '藍 Ai')" class="color-btn flex flex-col items-center p-2 rounded-lg border border-wood-700 bg-wood-950 hover:scale-105 transition">
+                            <span class="w-6 h-6 rounded-full border border-gray-600 mb-1" style="background-color: #1b365d;"></span>
+                            <span class="text-[10px] text-wood-200">藍</span>
+                        </button>
+                        <button onclick="setColor('#5b6b44', '鶯 Uguisu')" class="color-btn flex flex-col items-center p-2 rounded-lg border border-wood-700 bg-wood-950 hover:scale-105 transition">
+                            <span class="w-6 h-6 rounded-full border border-gray-600 mb-1" style="background-color: #5b6b44;"></span>
+                            <span class="text-[10px] text-wood-200">鶯</span>
+                        </button>
+                        <button onclick="setColor('#e59b27', '山吹 Yamabuki')" class="color-btn flex flex-col items-center p-2 rounded-lg border border-wood-700 bg-wood-950 hover:scale-105 transition">
+                            <span class="w-6 h-6 rounded-full border border-gray-600 mb-1" style="background-color: #e59b27;"></span>
+                            <span class="text-[10px] text-wood-200">山吹</span>
+                        </button>
+                        <button onclick="setColor('#7a482b', '代赭 Taisha')" class="color-btn flex flex-col items-center p-2 rounded-lg border border-wood-700 bg-wood-950 hover:scale-105 transition">
+                            <span class="w-6 h-6 rounded-full border border-gray-600 mb-1" style="background-color: #7a482b;"></span>
+                            <span class="text-[10px] text-wood-200">代赭</span>
+                        </button>
+                        <button onclick="setColor('#f7f4ea', '胡粉 Gofun')" class="color-btn flex flex-col items-center p-2 rounded-lg border border-wood-700 bg-wood-950 hover:scale-105 transition">
+                            <span class="w-6 h-6 rounded-full border border-gray-600 mb-1" style="background-color: #f7f4ea;"></span>
+                            <span class="text-[10px] text-wood-200">胡粉</span>
+                        </button>
+                        <div class="flex flex-col items-center justify-center p-1">
+                            <input type="color" id="custom-color-picker" value="#991b1b" onchange="setColor(this.value, 'カスタム')" class="w-7 h-7 rounded cursor-pointer bg-transparent border-none">
+                            <span class="text-[9px] text-wood-400 mt-1">カスタム</span>
+                        </div>
+                    </div>
+                </div>
 
-    /* モーダル制御 */
-    function openModal(modalId) {
-      document.getElementById(modalId).classList.remove('hidden');
-    }
+                <!-- Woodblock Actions -->
+                <div class="pt-2 border-t border-wood-800 space-y-2">
+                    <button onclick="autoFillInk()" class="w-full py-2 bg-wood-800 hover:bg-wood-700 text-wood-200 text-xs font-bold rounded-lg border border-wood-700 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-fill-drip"></i> 選択色で版木全体をインク塗り
+                    </button>
+                    <button onclick="clearCurrentBlock()" class="w-full py-2 bg-wood-950 hover:bg-red-950 text-red-400 text-xs font-bold rounded-lg border border-red-900/50 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-rotate-left"></i> 現在の版木をリセット
+                    </button>
+                </div>
+            </div>
 
-    document.getElementById('historyBtn').addEventListener('click', () => {
-      renderHistory();
-      openModal('historyModal');
-    });
+            <!-- MODE 2 CONTROLS: PHOTO CONVERTER (Hidden by default) -->
+            <div id="convert-controls" class="p-4 space-y-5 hidden">
+                <!-- Preset Sample Selector -->
+                <div>
+                    <h3 class="text-xs font-bold text-wood-300 uppercase tracking-wider mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-image text-yamabuki"></i> サンプル原画 / 画像アップロード
+                    </h3>
+                    <div class="grid grid-cols-3 gap-2 mb-3">
+                        <button onclick="loadPreset('fuji')" class="p-1 rounded bg-wood-800 hover:bg-wood-700 border border-wood-700 text-center">
+                            <div class="h-12 bg-cover bg-center rounded mb-1" style="background-image: url('https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=200&q=80');"></div>
+                            <span class="text-[10px] text-wood-200">赤富士</span>
+                        </button>
+                        <button onclick="loadPreset('wave')" class="p-1 rounded bg-wood-800 hover:bg-wood-700 border border-wood-700 text-center">
+                            <div class="h-12 bg-cover bg-center rounded mb-1" style="background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=200&q=80');"></div>
+                            <span class="text-[10px] text-wood-200">大海波</span>
+                        </button>
+                        <button onclick="loadPreset('cat')" class="p-1 rounded bg-wood-800 hover:bg-wood-700 border border-wood-700 text-center">
+                            <div class="h-12 bg-cover bg-center rounded mb-1" style="background-image: url('https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=200&q=80');"></div>
+                            <span class="text-[10px] text-wood-200">黒猫</span>
+                        </button>
+                    </div>
 
-    document.getElementById('knotBtn').addEventListener('click', () => {
-      openModal('knotModal');
-    });
+                    <label class="w-full py-2 bg-wood-800 hover:bg-wood-700 text-wood-200 text-xs font-bold rounded-lg border border-wood-600 border-dashed cursor-pointer flex items-center justify-center gap-2 transition">
+                        <i class="fa-solid fa-upload text-yamabuki"></i> お手持ちの画像を読み込む
+                        <input type="file" id="image-upload" accept="image/*" onchange="handleImageUpload(event)" class="hidden">
+                    </label>
+                </div>
 
-    document.querySelectorAll('.closeModalBtn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.target.closest('.fixed').classList.add('hidden');
-      });
-    });
+                <!-- Woodcut Filter Adjustments -->
+                <div class="space-y-4 pt-2 border-t border-wood-800">
+                    <h3 class="text-xs font-bold text-wood-300 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-shu"></i> 版画化パラメータ調整
+                    </h3>
 
-    /* 履歴消去（2段階ボタンUI） */
-    let clearConfirming = false;
-    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
-    clearHistoryBtn.addEventListener('click', () => {
-      if (!clearConfirming) {
-        clearConfirming = true;
-        clearHistoryBtn.textContent = '本当に消去しますか？（クリックで確定）';
-        clearHistoryBtn.classList.add('text-red-300', 'font-bold');
-        setTimeout(() => {
-          clearConfirming = false;
-          clearHistoryBtn.textContent = '履歴を消去';
-          clearHistoryBtn.classList.remove('text-red-300', 'font-bold');
-        }, 3000);
-      } else {
-        localStorage.removeItem('omikuji_history');
-        renderHistory();
-        showToast('履歴を消去しました');
-        clearConfirming = false;
-        clearHistoryBtn.textContent = '履歴を消去';
-        clearHistoryBtn.classList.remove('text-red-300', 'font-bold');
-      }
-    });
+                    <div>
+                        <div class="flex justify-between text-xs text-wood-300 mb-1">
+                            <span>墨彫り(主版) 輪郭強調</span>
+                            <span id="contour-val" class="text-yamabuki">50</span>
+                        </div>
+                        <input type="range" id="param-contour" min="10" max="100" value="50" oninput="processPhotoWoodcut()" class="w-full accent-yamabuki bg-wood-950 h-2 rounded-lg cursor-pointer">
+                    </div>
 
-    const soundBtn = document.getElementById('soundToggleBtn');
-    soundBtn.addEventListener('click', () => {
-      soundEnabled = !soundEnabled;
-      soundBtn.classList.toggle('bg-amber-900/50', soundEnabled);
-      showToast(soundEnabled ? "効果音を有効にしました" : "効果音を無効にしました");
-    });
+                    <div>
+                        <div class="flex justify-between text-xs text-wood-300 mb-1">
+                            <span>色版の数 (色数分解)</span>
+                            <span id="colors-val" class="text-yamabuki">4 色</span>
+                        </div>
+                        <input type="range" id="param-colors" min="2" max="6" value="4" step="1" oninput="processPhotoWoodcut()" class="w-full accent-yamabuki bg-wood-950 h-2 rounded-lg cursor-pointer">
+                    </div>
 
-    window.onload = function() {
-      if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
-      }
-    };
-  </script>
+                    <div>
+                        <div class="flex justify-between text-xs text-wood-300 mb-1">
+                            <span>彫り味 (彫り彫刻テクスチャ)</span>
+                            <span id="carve-depth-val" class="text-yamabuki">30</span>
+                        </div>
+                        <input type="range" id="param-carve-depth" min="0" max="80" value="30" oninput="processPhotoWoodcut()" class="w-full accent-yamabuki bg-wood-950 h-2 rounded-lg cursor-pointer">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-xs text-wood-300 mb-1">
+                            <span>木目・かすれ強度</span>
+                            <span id="grain-val" class="text-yamabuki">40</span>
+                        </div>
+                        <input type="range" id="param-grain" min="0" max="100" value="40" oninput="processPhotoWoodcut()" class="w-full accent-yamabuki bg-wood-950 h-2 rounded-lg cursor-pointer">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-xs text-wood-300 mb-1">
+                            <span>和紙インク滲み (Bleed)</span>
+                            <span id="bleed-val" class="text-yamabuki">2 px</span>
+                        </div>
+                        <input type="range" id="param-bleed" min="0" max="8" value="2" oninput="processPhotoWoodcut()" class="w-full accent-yamabuki bg-wood-950 h-2 rounded-lg cursor-pointer">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Global Paper & Stamp Settings -->
+            <div class="p-4 bg-wood-950 border-t border-wood-800 mt-auto space-y-3">
+                <h3 class="text-xs font-bold text-wood-400 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-scroll text-wood-300"></i> 和紙 & 落款 (印章)
+                </h3>
+                
+                <div class="grid grid-cols-2 gap-2">
+                    <select id="washi-type" onchange="updateWashiTexture()" class="bg-wood-900 border border-wood-700 text-wood-200 text-xs rounded-lg p-2">
+                        <option value="echizen">越前生漉和紙 (標準)</option>
+                        <option value="torinoko">鳥の子紙 (滑らか)</option>
+                        <option value="hosokawa">細川紙 (風合い強)</option>
+                        <option value="aged">古色和紙 (ビンテージ)</option>
+                    </select>
+                    
+                    <button onclick="toggleHankoSeal()" id="hanko-btn" class="px-2 py-1.5 bg-wood-800 border border-wood-700 text-shu text-xs font-bold rounded-lg hover:bg-wood-700 transition flex items-center justify-center gap-1">
+                        <span class="hanko-seal text-[9px]">極</span> 落款印 ON
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- CENTER CANVAS WORKSPACE -->
+        <section class="flex-1 flex flex-col bg-slate-950 relative overflow-hidden">
+            
+            <!-- Layer / View Switcher Toolbar -->
+            <div class="bg-wood-900/90 backdrop-blur border-b border-wood-800 px-4 py-2 flex items-center justify-between z-10">
+                <div class="flex items-center space-x-2 custom-scrollbar overflow-x-auto">
+                    <span class="text-xs font-bold text-wood-400 whitespace-nowrap">版木レイヤー:</span>
+                    <button onclick="selectBlock('final')" id="tab-final" class="block-tab px-3 py-1 rounded-md text-xs font-bold bg-yamabuki text-wood-900 shadow transition whitespace-nowrap">
+                        <i class="fa-solid fa-layer-group"></i> 完成和紙刷り (Print View)
+                    </button>
+                    <button onclick="selectBlock('sumi')" id="tab-sumi" class="block-tab px-3 py-1 rounded-md text-xs font-medium text-wood-300 hover:bg-wood-800 transition whitespace-nowrap">
+                        <span class="w-2.5 h-2.5 rounded-full inline-block bg-sumi border border-gray-400 mr-1"></span> 主版 (墨線)
+                    </button>
+                    <button onclick="selectBlock('color1')" id="tab-color1" class="block-tab px-3 py-1 rounded-md text-xs font-medium text-wood-300 hover:bg-wood-800 transition whitespace-nowrap">
+                        <span class="w-2.5 h-2.5 rounded-full inline-block bg-shu mr-1"></span> 色版一 (朱)
+                    </button>
+                    <button onclick="selectBlock('color2')" id="tab-color2" class="block-tab px-3 py-1 rounded-md text-xs font-medium text-wood-300 hover:bg-wood-800 transition whitespace-nowrap">
+                        <span class="w-2.5 h-2.5 rounded-full inline-block bg-ai mr-1"></span> 色版二 (藍)
+                    </button>
+                    <button onclick="selectBlock('color3')" id="tab-color3" class="block-tab px-3 py-1 rounded-md text-xs font-medium text-wood-300 hover:bg-wood-800 transition whitespace-nowrap">
+                        <span class="w-2.5 h-2.5 rounded-full inline-block bg-uguisu mr-1"></span> 色版三 (鶯)
+                    </button>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <button onclick="resetZoom()" class="p-1.5 text-xs text-wood-400 hover:text-white" title="拡大率リセット">
+                        <i class="fa-solid fa-compress"></i> 100%
+                    </button>
+                </div>
+            </div>
+
+            <!-- Canvas Container -->
+            <div id="canvas-container" class="flex-1 relative flex items-center justify-center p-4 overflow-auto custom-scrollbar">
+                
+                <!-- Main Canvas Overlay Frame -->
+                <div class="relative shadow-2xl rounded-sm p-4 bg-wood-900 border-8 border-wood-800 flex items-center justify-center" id="frame-wrapper">
+                    <!-- Traditional Kento Registration Mark Visual Guide -->
+                    <div class="absolute top-1 left-1 w-4 h-4 border-t-2 border-l-2 border-yamabuki/40 pointer-events-none" title="見当 (Kento Mark)"></div>
+                    <div class="absolute bottom-1 left-1 w-6 h-4 border-b-2 border-l-2 border-yamabuki/40 pointer-events-none" title="鍵見当"></div>
+
+                    <!-- The Main Canvas -->
+                    <canvas id="main-canvas" width="800" height="600" class="washi-texture shadow-inner cursor-chisel transition-transform duration-75"></canvas>
+
+                    <!-- Interactive Baren Rubbing Feedback Overlay -->
+                    <div id="baren-cursor-overlay" class="absolute pointer-events-none w-16 h-16 rounded-full border-2 border-yamabuki/60 bg-yamabuki/20 hidden flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2">
+                        <i class="fa-solid fa-arrows-spin text-yamabuki animate-spin text-sm"></i>
+                    </div>
+                </div>
+
+                <!-- Toast Notification Box -->
+                <div id="toast" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-wood-900/95 border border-yamabuki/60 text-wood-100 px-5 py-2.5 rounded-full shadow-2xl text-xs flex items-center gap-2 pointer-events-none opacity-0 transition-opacity duration-300 z-30">
+                    <i class="fa-solid fa-circle-info text-yamabuki"></i> <span id="toast-msg">主版に彫り込みを開始できます</span>
+                </div>
+            </div>
+
+            <!-- Bottom Information / Status Bar -->
+            <div class="bg-wood-950 border-t border-wood-900 px-4 py-1.5 text-[11px] text-wood-400 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span id="current-status-text"><i class="fa-solid fa-info-circle"></i> 彫刻刀で木版を削り、インクを載せて刷り上げましょう</span>
+                </div>
+                <div class="flex items-center gap-4 font-mono text-[10px]">
+                    <span id="pos-display">X: 0, Y: 0</span>
+                    <span>800 x 600 px</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Global Application State
+        let currentMode = 'carve'; // 'carve' or 'convert'
+        let activeBlockKey = 'sumi'; // 'final', 'sumi', 'color1', 'color2', 'color3'
+        let currentTool = 'v_gouge'; // 'v_gouge', 'round_gouge', 'flat_chisel', 'kiri_chisel', 'roller', 'baren'
+        let toolSize = 5;
+        let currentColor = '#1c1b1a';
+        let colorName = '墨 Sumi';
+        let showHanko = true;
+        let audioEnabled = true;
+
+        // Audio Context (Web Audio API for carving and baren sounds)
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+        }
+
+        function playSound(type) {
+            if (!audioEnabled) return;
+            try {
+                initAudio();
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                const bufferSize = audioCtx.sampleRate * 0.08;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+
+                if (type === 'carve') {
+                    // Scratchy wood carving noise
+                    for (let i = 0; i < bufferSize; i++) {
+                        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.5));
+                    }
+                    const noise = audioCtx.createBufferSource();
+                    noise.buffer = buffer;
+
+                    const filter = audioCtx.createBiquadFilter();
+                    filter.type = 'bandpass';
+                    filter.frequency.value = 1800 + Math.random() * 600;
+                    filter.Q.value = 3;
+
+                    noise.connect(filter);
+                    filter.connect(audioCtx.destination);
+                    noise.start();
+                } else if (type === 'baren') {
+                    // Low muffled rubbing swoosh sound
+                    for (let i = 0; i < bufferSize; i++) {
+                        data[i] = (Math.random() * 2 - 1) * 0.3;
+                    }
+                    const noise = audioCtx.createBufferSource();
+                    noise.buffer = buffer;
+
+                    const filter = audioCtx.createBiquadFilter();
+                    filter.type = 'lowpass';
+                    filter.frequency.value = 400 + Math.random() * 200;
+
+                    noise.connect(filter);
+                    filter.connect(audioCtx.destination);
+                    noise.start();
+                }
+            } catch (e) {
+                // Audio not supported or blocked
+            }
+        }
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            const btn = document.getElementById('audio-btn');
+            btn.innerHTML = audioEnabled ? '<i class="fa-solid fa-volume-high"></i>' : '<i class="fa-solid fa-volume-xmark text-red-400"></i>';
+            showToast(audioEnabled ? "効果音: オン" : "効果音: オフ");
+        }
+
+        // Canvas Setup
+        const mainCanvas = document.getElementById('main-canvas');
+        const mainCtx = mainCanvas.getContext('2d');
+        const width = 800;
+        const height = 600;
+
+        // Offscreen Canvases for each Woodblock
+        // Each block stores: carved wood cutouts (alpha cut) & ink layer
+        const blocks = {
+            sumi: { color: '#1c1b1a', name: '主版 (墨)' },
+            color1: { color: '#c03529', name: '色版一 (朱)' },
+            color2: { color: '#1b365d', name: '色版二 (藍)' },
+            color3: { color: '#5b6b44', name: '色版三 (鶯)' }
+        };
+
+        // Create canvas contexts for each block
+        Object.keys(blocks).forEach(key => {
+            const blockCanvas = document.createElement('canvas');
+            blockCanvas.width = width;
+            blockCanvas.height = height;
+            const ctx = blockCanvas.getContext('2d');
+            
+            // Fill initial wood surface
+            ctx.fillStyle = blocks[key].color;
+            ctx.fillRect(0, 0, width, height);
+
+            blocks[key].canvas = blockCanvas;
+            blocks[key].ctx = ctx;
+
+            // Baren impression layer for this block (0 to 1 opacity mask)
+            const barenCanvas = document.createElement('canvas');
+            barenCanvas.width = width;
+            barenCanvas.height = height;
+            const bCtx = barenCanvas.getContext('2d');
+            bCtx.fillStyle = '#ffffff'; // Fully pressed by default in convert mode, unpressed in manual mode
+            bCtx.fillRect(0, 0, width, height);
+            
+            blocks[key].barenCanvas = barenCanvas;
+            blocks[key].barenCtx = bCtx;
+        });
+
+        // Photo Converter Source Image Storage
+        let loadedSourceImage = null;
+
+        // Carving state
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+
+        // Initialize Canvas listeners
+        mainCanvas.addEventListener('mousedown', startDrawing);
+        mainCanvas.addEventListener('mousemove', draw);
+        mainCanvas.addEventListener('mouseup', stopDrawing);
+        mainCanvas.addEventListener('mouseleave', stopDrawing);
+
+        // Touch support for mobile devices
+        mainCanvas.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent('mousedown', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            mainCanvas.dispatchEvent(mouseEvent);
+        });
+        mainCanvas.addEventListener('touchmove', (e) => {
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent('mousemove', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            mainCanvas.dispatchEvent(mouseEvent);
+        });
+        mainCanvas.addEventListener('touchend', () => {
+            const mouseEvent = new MouseEvent('mouseup', {});
+            mainCanvas.dispatchEvent(mouseEvent);
+        });
+
+        function getCanvasCoordinates(e) {
+            const rect = mainCanvas.getBoundingClientRect();
+            const scaleX = mainCanvas.width / rect.width;
+            const scaleY = mainCanvas.height / rect.height;
+            return {
+                x: (e.clientX - rect.left) * scaleX,
+                y: (e.clientY - rect.top) * scaleY
+            };
+        }
+
+        function startDrawing(e) {
+            if (activeBlockKey === 'final' && currentTool !== 'baren') {
+                showToast("完成画ビューです。版木タグを選択して刻むか、馬連を使用してください。");
+                return;
+            }
+            isDrawing = true;
+            const coords = getCanvasCoordinates(e);
+            lastX = coords.x;
+            lastY = coords.y;
+            performToolAction(coords.x, coords.y, true);
+        }
+
+        function draw(e) {
+            const coords = getCanvasCoordinates(e);
+            document.getElementById('pos-display').innerText = `X: ${Math.round(coords.x)}, Y: ${Math.round(coords.y)}`;
+
+            // Update baren cursor overlay position
+            const barenOverlay = document.getElementById('baren-cursor-overlay');
+            if (currentTool === 'baren') {
+                const rect = mainCanvas.getBoundingClientRect();
+                barenOverlay.style.left = `${e.clientX - rect.left}px`;
+                barenOverlay.style.top = `${e.clientY - rect.top}px`;
+            }
+
+            if (!isDrawing) return;
+            performToolAction(coords.x, coords.y, false);
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        function performToolAction(x, y, isStart) {
+            if (currentTool === 'baren') {
+                // Apply Baren pressure onto active block or all blocks if on final
+                playSound('baren');
+                const keysToApply = activeBlockKey === 'final' ? Object.keys(blocks) : [activeBlockKey];
+                
+                keysToApply.forEach(key => {
+                    const bCtx = blocks[key].barenCtx;
+                    bCtx.fillStyle = '#ffffff';
+                    bCtx.beginPath();
+                    bCtx.arc(x, y, toolSize * 2, 0, Math.PI * 2);
+                    bCtx.fill();
+                });
+
+                renderView();
+                return;
+            }
+
+            // Otherwise carving or rolling ink on a specific block
+            if (activeBlockKey === 'final') return;
+
+            const block = blocks[activeBlockKey];
+            const ctx = block.ctx;
+
+            ctx.save();
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            if (currentTool === 'roller') {
+                // Apply ink to block
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.strokeStyle = currentColor;
+                ctx.lineWidth = toolSize * 2;
+                ctx.beginPath();
+                ctx.moveTo(lastX, lastY);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+            } else {
+                // Carve out wood (Destination-Out cuts away wood block material)
+                playSound('carve');
+                ctx.globalCompositeOperation = 'destination-out';
+
+                if (currentTool === 'v_gouge') {
+                    // Sharp angular V-gouge
+                    ctx.lineWidth = toolSize;
+                    ctx.strokeStyle = 'rgba(0,0,0,1)';
+                    ctx.beginPath();
+                    ctx.moveTo(lastX, lastY);
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+                } else if (currentTool === 'round_gouge') {
+                    // Smooth round gouge stroke
+                    ctx.lineWidth = toolSize * 2.5;
+                    ctx.strokeStyle = 'rgba(0,0,0,1)';
+                    ctx.beginPath();
+                    ctx.moveTo(lastX, lastY);
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+                } else if (currentTool === 'flat_chisel') {
+                    // Flat wide square cut
+                    ctx.lineWidth = toolSize * 4;
+                    ctx.lineCap = 'square';
+                    ctx.strokeStyle = 'rgba(0,0,0,1)';
+                    ctx.beginPath();
+                    ctx.moveTo(lastX, lastY);
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+                } else if (currentTool === 'kiri_chisel') {
+                    // Ultra fine cutting knife mark
+                    ctx.lineWidth = Math.max(1, toolSize * 0.5);
+                    ctx.strokeStyle = 'rgba(0,0,0,1)';
+                    ctx.beginPath();
+                    ctx.moveTo(lastX, lastY);
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+                }
+            }
+
+            ctx.restore();
+            lastX = x;
+            lastY = y;
+
+            renderView();
+        }
+
+        function renderView() {
+            mainCtx.clearRect(0, 0, width, height);
+
+            if (activeBlockKey !== 'final') {
+                // Show single block editing view (Woodblock perspective)
+                // 1. Draw Wood Background Grain Texture
+                drawWoodBackground(mainCtx);
+
+                // 2. Draw current block's carved wood layer
+                const block = blocks[activeBlockKey];
+                mainCtx.drawImage(block.canvas, 0, 0);
+
+                // Overlay carving hint text
+                mainCtx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                mainCtx.font = '14px Shippori Mincho';
+                mainCtx.fillText(`[ 版刻モード: ${block.name} ] 削った白部分が紙に染まりません`, 20, 30);
+            } else {
+                // SHOW FINAL JAPANESE WASHI PRINT COMPOSITION
+                // 1. Base Washi Paper
+                drawWashiPaperBackground(mainCtx);
+
+                // 2. Multi-layer Ukiyo-e Printing (Composite blocks with Baren pressure & Bleed)
+                const bleedAmount = parseInt(document.getElementById('param-bleed')?.value || 2);
+                
+                Object.keys(blocks).forEach(key => {
+                    const block = blocks[key];
+
+                    // Temporary canvas to calculate baren rubbing opacity transfer
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = width;
+                    tempCanvas.height = height;
+                    const tempCtx = tempCanvas.getContext('2d');
+
+                    // Draw ink block
+                    tempCtx.drawImage(block.canvas, 0, 0);
+
+                    // Mask by baren pressure
+                    tempCtx.globalCompositeOperation = 'destination-in';
+                    tempCtx.drawImage(block.barenCanvas, 0, 0);
+
+                    // Composite onto final paper using realistic Japanese ink multiply
+                    mainCtx.save();
+                    mainCtx.globalCompositeOperation = 'multiply';
+                    mainCtx.globalAlpha = 0.88;
+
+                    // Slight ink bleed blur shift
+                    if (bleedAmount > 0) {
+                        mainCtx.filter = `blur(${bleedAmount * 0.3}px)`;
+                    }
+
+                    mainCtx.drawImage(tempCanvas, 0, 0);
+                    mainCtx.restore();
+                });
+
+                // 3. Wood Grain Overlay Effect onto paper
+                drawWoodGrainOverlay(mainCtx);
+
+                // 4. Hanko Red Seal Stamp if enabled
+                if (showHanko) {
+                    drawHankoSeal(mainCtx, width - 70, height - 90);
+                }
+            }
+        }
+
+        function drawWoodBackground(ctx) {
+            ctx.fillStyle = '#996035';
+            ctx.fillRect(0, 0, width, height);
+            
+            // Wood rings texture generator
+            ctx.fillStyle = 'rgba(62, 34, 23, 0.12)';
+            for (let i = 0; i < height; i += 8) {
+                const wave = Math.sin(i * 0.03) * 12;
+                ctx.fillRect(0, i + wave, width, 3);
+            }
+        }
+
+        function drawWashiPaperBackground(ctx) {
+            ctx.fillStyle = '#f7f4ea';
+            ctx.fillRect(0, 0, width, height);
+
+            // Paper fibers noise
+            ctx.fillStyle = 'rgba(140, 124, 109, 0.05)';
+            for (let i = 0; i < 400; i++) {
+                const rx = Math.random() * width;
+                const ry = Math.random() * height;
+                const rw = Math.random() * 8 + 2;
+                const rh = Math.random() * 2 + 1;
+                ctx.fillRect(rx, ry, rw, rh);
+            }
+        }
+
+        function drawWoodGrainOverlay(ctx) {
+            const grainIntensity = parseInt(document.getElementById('param-grain')?.value || 30) / 100;
+            if (grainIntensity <= 0) return;
+
+            ctx.save();
+            ctx.globalCompositeOperation = 'overlay';
+            ctx.globalAlpha = grainIntensity * 0.35;
+
+            ctx.fillStyle = '#000000';
+            for (let y = 0; y < height; y += 4) {
+                if (Math.sin(y * 0.05) > 0.2) {
+                    ctx.fillRect(0, y, width, 1.5);
+                }
+            }
+            ctx.restore();
+        }
+
+        function drawHankoSeal(ctx, x, y) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(-0.05);
+
+            // Stamp border box
+            ctx.strokeStyle = '#c03529';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(0, 0, 42, 42);
+
+            // Stamp text
+            ctx.fillStyle = '#c03529';
+            ctx.font = 'bold 16px "Yuji Syuku", serif';
+            ctx.fillText('木版', 6, 20);
+            ctx.fillText('極印', 6, 36);
+
+            ctx.restore();
+        }
+
+        function loadPreset(name) {
+            const presets = {
+                fuji: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&q=80',
+                wave: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80',
+                cat: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=800&q=80'
+            };
+
+            const img = new Image();
+            img.crossOrigin = 'Anonymous';
+            img.onload = () => {
+                loadedSourceImage = img;
+                if (currentMode === 'convert') {
+                    processPhotoWoodcut();
+                } else {
+                    // Draw directly on sumi block as reference
+                    const ctx = blocks.sumi.ctx;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    renderView();
+                }
+                showToast(`原画「${name}」を読み込みました`);
+            };
+            img.src = presets[name];
+        }
+
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    loadedSourceImage = img;
+                    processPhotoWoodcut();
+                    showToast("カスタム画像をアップロードし木版画分解を行いました");
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function processPhotoWoodcut() {
+            if (!loadedSourceImage) {
+                // If no image, load default Fuji
+                loadPreset('fuji');
+                return;
+            }
+
+            showToast("木版画分解を計算中...");
+
+            // Temporary source canvas for image pixel extraction
+            const srcCanvas = document.createElement('canvas');
+            srcCanvas.width = width;
+            srcCanvas.height = height;
+            const srcCtx = srcCanvas.getContext('2d');
+
+            // Draw image scaled to fill
+            srcCtx.drawImage(loadedSourceImage, 0, 0, width, height);
+            const imgData = srcCtx.getImageData(0, 0, width, height);
+            const data = imgData.data;
+
+            const contourThresh = parseInt(document.getElementById('param-contour').value);
+            const colorNum = parseInt(document.getElementById('param-colors').value);
+            const carveDepth = parseInt(document.getElementById('param-carve-depth').value);
+
+            // 1. Extract Keyblock Lineart (主版 - 墨線) using Sobel Edge Filter
+            const sumiCtx = blocks.sumi.ctx;
+            sumiCtx.clearRect(0, 0, width, height);
+            sumiCtx.fillStyle = '#1c1b1a';
+
+            const edgeData = new Uint8ClampedArray(width * height);
+            
+            for (let y = 1; y < height - 1; y++) {
+                for (let x = 1; x < width - 1; x++) {
+                    const idx = (y * width + x) * 4;
+                    
+                    // Grayscale intensity
+                    const lum = data[idx] * 0.299 + data[idx + 1] * 0.587 + data[idx + 2] * 0.114;
+                    const lumRight = data[idx + 4] * 0.299 + data[idx + 5] * 0.587 + data[idx + 6] * 0.114;
+                    const lumDown = data[((y + 1) * width + x) * 4] * 0.299 + data[((y + 1) * width + x) * 4 + 1] * 0.587 + data[((y + 1) * width + x) * 4 + 2] * 0.114;
+
+                    const diff = Math.abs(lum - lumRight) + Math.abs(lum - lumDown);
+                    if (diff > (110 - contourThresh)) {
+                        edgeData[y * width + x] = 255; // Line outline
+                    }
+                }
+            }
+
+            // Draw Sobel outlines to Sumi block
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    if (edgeData[y * width + x] === 255) {
+                        sumiCtx.fillRect(x, y, 1.8, 1.8);
+                    }
+                }
+            }
+
+            // 2. Color Block Separation (色版分解: 朱, 藍, 鶯)
+            const palette = [
+                { key: 'color1', hex: '#c03529', r: 192, g: 53, b: 41 },  // 朱
+                { key: 'color2', hex: '#1b365d', r: 27, g: 54, b: 93 },   // 藍
+                { key: 'color3', hex: '#5b6b44', r: 91, g: 107, b: 68 }   // 鶯
+            ];
+
+            // Reset color blocks
+            palette.forEach(p => {
+                const ctx = blocks[p.key].ctx;
+                ctx.clearRect(0, 0, width, height);
+            });
+
+            // Map image colors into distinct quantized Ukiyo-e woodblock layers
+            for (let y = 0; y < height; y += 2) {
+                for (let x = 0; x < width; x += 2) {
+                    const idx = (y * width + x) * 4;
+                    const r = data[idx];
+                    const g = data[idx + 1];
+                    const b = data[idx + 2];
+
+                    // Find closest color block in palette
+                    let minDist = Infinity;
+                    let closest = null;
+
+                    palette.slice(0, colorNum - 1).forEach(p => {
+                        const dist = Math.hypot(r - p.r, g - p.g, b - p.b);
+                        if (dist < minDist) {
+                            minDist = dist;
+                            closest = p;
+                        }
+                    });
+
+                    // Add woodcut gouge chisel jitter noise if threshold met
+                    if (closest && minDist < 160) {
+                        const ctx = blocks[closest.key].ctx;
+                        ctx.fillStyle = closest.hex;
+
+                        // Add carved texture edge roughness
+                        const noise = Math.random() * carveDepth > 20 ? 0 : 2;
+                        ctx.fillRect(x, y, 2 + noise, 2 + noise);
+                    }
+                }
+            }
+
+            // Ensure all Baren rub layers are fully pressed for Photo mode preview
+            Object.keys(blocks).forEach(key => {
+                const bCtx = blocks[key].barenCtx;
+                bCtx.fillStyle = '#ffffff';
+                bCtx.fillRect(0, 0, width, height);
+            });
+
+            // Switch to final view and render
+            activeBlockKey = 'final';
+            updateActiveTabUI();
+            renderView();
+            showToast("浮世絵木版画への分解が完了しました");
+        }
+
+        function switchMode(mode) {
+            currentMode = mode;
+            const carveBtn = document.getElementById('mode-carve-btn');
+            const convertBtn = document.getElementById('mode-convert-btn');
+            const carveControls = document.getElementById('carve-controls');
+            const convertControls = document.getElementById('convert-controls');
+
+            if (mode === 'carve') {
+                carveBtn.className = "px-4 py-1.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 bg-wood-700 text-white shadow";
+                convertBtn.className = "px-4 py-1.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-wood-400 hover:text-white";
+                carveControls.classList.remove('hidden');
+                convertControls.classList.add('hidden');
+                showToast("手彫り刷りモード: 彫刻刀で木版を削りましょう");
+            } else {
+                convertBtn.className = "px-4 py-1.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 bg-wood-700 text-white shadow";
+                carveBtn.className = "px-4 py-1.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-wood-400 hover:text-white";
+                convertControls.classList.remove('hidden');
+                carveControls.classList.add('hidden');
+                processPhotoWoodcut();
+            }
+        }
+
+        function selectBlock(key) {
+            activeBlockKey = key;
+            updateActiveTabUI();
+
+            const statusText = document.getElementById('current-status-text');
+            if (key === 'final') {
+                statusText.innerHTML = `<i class="fa-solid fa-eye"></i> 完成図プレビュー: すべての版木と和紙の重ね刷り結果`;
+            } else {
+                statusText.innerHTML = `<i class="fa-solid fa-cut"></i> ${blocks[key].name} を編集中: 彫刻刀で白い箇所を削り出します`;
+            }
+
+            renderView();
+        }
+
+        function updateActiveTabUI() {
+            document.querySelectorAll('.block-tab').forEach(tab => {
+                tab.className = "block-tab px-3 py-1 rounded-md text-xs font-medium text-wood-300 hover:bg-wood-800 transition whitespace-nowrap";
+            });
+
+            const activeTab = document.getElementById(`tab-${activeBlockKey}`);
+            if (activeTab) {
+                activeTab.className = "block-tab px-3 py-1 rounded-md text-xs font-bold bg-yamabuki text-wood-900 shadow transition whitespace-nowrap";
+            }
+        }
+
+        function setTool(tool) {
+            currentTool = tool;
+            document.querySelectorAll('.tool-btn').forEach(btn => {
+                btn.classList.remove('border-yamabuki', 'text-white', 'bg-wood-700');
+                btn.classList.add('border-wood-700', 'text-wood-300');
+            });
+
+            const activeBtn = document.getElementById(`tool-${tool}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('border-wood-700', 'text-wood-300');
+                activeBtn.classList.add('border-yamabuki', 'text-white', 'bg-wood-700');
+            }
+
+            const barenOverlay = document.getElementById('baren-cursor-overlay');
+            if (tool === 'baren') {
+                mainCanvas.className = "washi-texture shadow-inner cursor-baren";
+                barenOverlay.classList.remove('hidden');
+                showToast("馬連モード: キャンバス上をドラッグして紙にインクを摩擦密着させます");
+            } else {
+                mainCanvas.className = "washi-texture shadow-inner cursor-chisel";
+                barenOverlay.classList.add('hidden');
+            }
+        }
+
+        function updateToolSize(val) {
+            toolSize = parseInt(val);
+            document.getElementById('tool-size-val').innerText = `${val} px`;
+        }
+
+        function setColor(hex, name) {
+            currentColor = hex;
+            colorName = name;
+
+            document.querySelectorAll('.color-btn').forEach(btn => {
+                btn.classList.remove('border-white', 'scale-105');
+            });
+
+            // If in carve mode and user selected ink roller, set current block color
+            if (activeBlockKey !== 'final') {
+                blocks[activeBlockKey].color = hex;
+            }
+
+            showToast(`インク色: ${name} に切り替えました`);
+        }
+
+        function autoFillInk() {
+            if (activeBlockKey === 'final') {
+                showToast("版木を選択してください");
+                return;
+            }
+            const ctx = blocks[activeBlockKey].ctx;
+            ctx.fillStyle = currentColor;
+            ctx.fillRect(0, 0, width, height);
+            renderView();
+            showToast(`${blocks[activeBlockKey].name} に ${colorName} インクを塗り直しました`);
+        }
+
+        function clearCurrentBlock() {
+            if (activeBlockKey === 'final') return;
+            const ctx = blocks[activeBlockKey].ctx;
+            ctx.fillStyle = blocks[activeBlockKey].color;
+            ctx.fillRect(0, 0, width, height);
+            renderView();
+            showToast(`${blocks[activeBlockKey].name} の彫り込みを初期化しました`);
+        }
+
+        function updateWashiTexture() {
+            const washiType = document.getElementById('washi-type').value;
+            renderView();
+            showToast(`和紙の種類を [${washiType}] に変更しました`);
+        }
+
+        function toggleHankoSeal() {
+            showHanko = !showHanko;
+            const btn = document.getElementById('hanko-btn');
+            btn.innerHTML = showHanko ? 
+                '<span class="hanko-seal text-[9px]">極</span> 落款印 ON' : 
+                '<span class="text-wood-500">落款印 OFF</span>';
+            renderView();
+        }
+
+        function resetZoom() {
+            mainCanvas.style.transform = 'scale(1)';
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            toastMsg.innerText = msg;
+            toast.classList.remove('opacity-0');
+            toast.classList.add('opacity-100');
+
+            clearTimeout(window.toastTimer);
+            window.toastTimer = setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0');
+            }, 3000);
+        }
+
+        function downloadArtwork() {
+            // Ensure render is on final view canvas
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = width;
+            tempCanvas.height = height;
+            const tempCtx = tempCanvas.getContext('2d');
+
+            // Draw full composition to export canvas
+            activeBlockKey = 'final';
+            renderView();
+
+            tempCtx.drawImage(mainCanvas, 0, 0);
+
+            // Export PNG
+            const link = document.createElement('a');
+            link.download = `mokuhanga_print_${Date.now()}.png`;
+            link.href = mainCanvas.toDataURL('image/png');
+            link.click();
+            showToast("完成木版画をPNGファイルとして保存しました！");
+        }
+
+        // Initialize application on window load
+        window.onload = function() {
+            loadPreset('fuji');
+        };
+    </script>
 </body>
-</html>
+</html> 
